@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Календарь съёмок — Фото/Видео</title>
+<meta name="description" content="Календарь записи на фото и видеосъёмку">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header id="header">
+  <div class="logo">🎬 Мой Календарь Съёмок</div>
+  <div class="header-actions">
+    <button id="todayBtn" class="btn-light">Сегодня</button>
+    <button id="exportCsvBtn" class="btn-light">📄 Скачать историю (Excel)</button>
+    <button id="exportTxtBtn" class="btn-light">📝 Скачать (текст)</button>
+    <button id="backupBtn" class="btn-light">💾 Бэкап</button>
+    <button id="importBtn" class="btn-light">⬆ Импорт</button>
+    <input type="file" id="importFile" accept="application/json" style="display:none">
+  </div>
+</header>
+
+<!-- Легенда -->
+<section class="cal-legend">
+  <div class="legend-item"><span class="dot has-events"></span>Есть записи</div>
+  <div class="legend-item"><span class="dot today-dot"></span>Сегодня</div>
+  <div class="legend-item">Всего записей: <strong id="totalCount">0</strong></div>
+</section>
+
+<!-- Навигация по месяцам -->
+<section class="calendar-wrap">
+  <div class="cal-nav">
+    <button id="prevMonth">‹</button>
+    <h2 id="monthLabel">—</h2>
+    <button id="nextMonth">›</button>
+  </div>
+
+  <div class="cal-weekdays">
+    <span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span>
+    <span class="we">Сб</span><span class="we">Вс</span>
+  </div>
+
+  <div class="cal-grid" id="calGrid"></div>
+</section>
+
+<!-- Панель выбранного дня -->
+<section class="day-panel" id="dayPanel" style="display:none">
+  <div class="day-panel-head">
+    <h3 id="dayTitle">—</h3>
+    <button id="dayClose">✕</button>
+  </div>
+
+  <div id="dayEventsList" class="day-events-list"></div>
+
+  <button id="addEventBtn" class="big-btn">＋ Добавить съёмку на этот день</button>
+</section>
+
+<!-- Модалка добавления/редактирования съёмки -->
+<div id="eventModal" class="modal">
+  <div class="modal-box">
+    <h3 id="modalTitle">Новая съёмка</h3>
+    <p id="modalDateInfo" class="date-info"></p>
+
+    <label>Название мероприятия *</label>
+    <input type="text" id="fTitle" placeholder="Свадьба Анны и Ивана / Лукбук бренда...">
+
+    <label>Тип съёмки</label>
+    <select id="fType">
+      <option value="📸 Фотосъёмка">📸 Фотосъёмка</option>
+      <option value="🎥 Видеосъёмка">🎥 Видеосъёмка</option>
+      <option value="📸🎥 Фото + Видео">📸🎥 Фото + Видео</option>
+      <option value="💍 Свадьба">💍 Свадьба</option>
+      <option value="👶 Семейная / Lovestory">👶 Семейная / Lovestory</option>
+      <option value="🎂 День рождения / Праздник">🎂 День рождения / Праздник</option>
+      <option value="🏢 Коммерческая / Реклама">🏢 Коммерческая / Реклама</option>
+      <option value="👗 Fashion / Лукбук">👗 Fashion / Лукбук</option>
+      <option value="🎤 Мероприятие / Репортаж">🎤 Мероприятие / Репортаж</option>
+      <option value="🖥 Контент для соцсетей">🖥 Контент для соцсетей</option>
+      <option value="Другое">Другое</option>
+    </select>
+
+    <div class="row">
+      <div class="col">
+        <label>Время начала *</label>
+        <input type="time" id="fTimeStart" value="10:00">
+      </div>
+      <div class="col">
+        <label>Время конца</label>
+        <input type="time" id="fTimeEnd" value="14:00">
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <label>Стоимость (₽)</label>
+        <input type="number" id="fPrice" placeholder="15000" min="0">
+      </div>
+      <div class="col">
+        <label>Статус оплаты</label>
+        <select id="fPaid">
+          <option value="Не оплачено">Не оплачено</option>
+          <option value="Предоплата">Предоплата</option>
+          <option value="Оплачено полностью">Оплачено полностью</option>
+        </select>
+      </div>
+    </div>
+
+    <label>Имя клиента</label>
+    <input type="text" id="fClient" placeholder="Анна Петрова">
+
+    <label>Телефон / Telegram / соцсеть</label>
+    <input type="text" id="fPhone" placeholder="+7 999 123-45-67 / @username">
+
+    <label>Адрес / локация съёмки</label>
+    <input type="text" id="fAddress" placeholder="г. Москва, ул. Ленина 1 / Студия 'Свет'">
+
+    <label>Детали съёмки (реквизит, пожелания, кол-во часов, образы...)</label>
+    <textarea id="fNote" rows="3" placeholder="2 образа, нужен дрон, выезд за город, монтаж 2 ролика..."></textarea>
+
+    <div class="modal-btns">
+      <button id="saveEventBtn" class="btn-save">💾 Сохранить</button>
+      <button id="deleteEventBtn" class="btn-delete" style="display:none">🗑 Удалить</button>
+      <button id="cancelEventBtn" class="btn-cancel">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>© Календарь съёмок · Все данные хранятся в твоём браузере</p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
